@@ -54,7 +54,8 @@ function openEditModal(manga) {
     document.getElementById('totalChapters').value = manga.total || '';
     modal.style.display = 'flex';
 }
-javascriptif (deleteBtn) {
+
+if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
         if (!editingMangaId || !confirm('Удалить этот тайтл?')) return;
         const { error } = await supabase.from('manga').delete().eq('id', editingMangaId);
@@ -98,6 +99,8 @@ if (form) {
         e.preventDefault(); if (!supabase) return;
         submitBtn.disabled = true; submitBtn.innerText = 'Загрузка...';
         const fileInput = document.getElementById('coverFile');
+        
+        // ИСПРАВЛЕНО ТУТ: берем строго первый файл [0] из списка выбранных
         const file = (fileInput && fileInput.files && fileInput.files.length > 0) ? fileInput.files[0] : null;
         let coverUrl = currentMangaCover; 
 
@@ -105,7 +108,7 @@ if (form) {
             const fileExt = file.name.split('.').pop();
             const filePath = `${Date.now()}.${fileExt}`;
             const { error: upErr } = await supabase.storage.from('covers').upload(filePath, file);
-            if (upErr) { alert('Ошибка картинки: ' + upErr.message); submitBtn.disabled = false; submitBtn.innerText = 'Ок'; return; }
+            if (upErr) { alert('Ошибка картинки: ' + upErr.message); submitBtn.disabled = false; submitBtn.innerText = 'Добавить'; return; }
             const { data: urlData } = supabase.storage.from('covers').getPublicUrl(filePath);
             coverUrl = urlData.publicUrl;
         }
@@ -122,7 +125,7 @@ if (form) {
             const { error: iErr } = await supabase.from('manga').insert([mangaData]); err = iErr;
         }
         if (err) { alert('Ошибка базы: ' + err.message); } else { await loadMangaFromCloud(); form.reset(); modal.style.display = 'none'; }
-        submitBtn.disabled = false; submitBtn.innerText = 'Добавить';
+        submitBtn.disabled = false; submitBtn.innerText = editingMangaId ? 'Сохранить' : 'Добавить';
     });
 }
 
