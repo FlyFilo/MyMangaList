@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Библиотека Манхвы</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>Моя Библиотека</h1>
+    </header>
+
+    <main class="content-container">
+        <div class="manga-grid" id="mangaGrid">
+            <!-- Плитка-плюсик для добавления -->
+            <button class="tile add-tile" id="openFormBtn" aria-label="Добавить манхву">
+                <span class="plus-icon">+</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Скрытая форма добавления -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-window">
+            <h2>Новый тайтл</h2>
+            <form id="addMangaForm">
+                <div class="input-group">
+                    <label for="title">Название тайтла</label>
+                    <input type="text" id="title" required placeholder="Например: Магия вернувшегося...">
+                </div>
+                
+                <div class="input-group">
+                    <label for="cover">Ссылка на обложку (URL)</label>
+                    <input type="url" id="cover" placeholder="https://site.com">
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="currentChapter">Текущая глава</label>
+                        <input type="number" id="currentChapter" value="1" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="totalChapters">Всего глав</label>
+                        <input type="number" id="totalChapters" placeholder="—">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="closeFormBtn">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Подключаем облачную базу Supabase -->
+    <script src="https://jsdelivr.net"></script>
+
+    <script>
+        // === ВСТАВЬТЕ СВОИ ДАННЫЕ СЮДА ===
+        const SUPABASE_URL = 'https://pznxnvgnqwbylevxbiqt.supabase.co';
+        const SUPABASE_SECRET_KEY = 'sb_secret_PJR5Tl6w_UQLxu4HiXM3pg_rAnKrdcz';
+        const MY_SECRET_PASSWORD = '134679Gleb41k.m';
+        // ==================================
+
+        let supabase = null;
+
+        const modal = document.getElementById('modalOverlay');
+        const openBtn = document.getElementById('openFormBtn');
+        const closeBtn = document.getElementById('closeFormBtn');
+        const form = document.getElementById('addMangaForm');
+        const mangaGrid = document.getElementById('mangaGrid');
+
+        // Функция проверки пароля
+        function checkAuth() {
+            let savedPassword = localStorage.getItem('site_password');
+            
+            while (savedPassword !== MY_SECRET_PASSWORD) {
+                savedPassword = prompt('Введите пароль для доступа к библиотеке манхвы:');
+                if (savedPassword === null) {
+                    document.body.innerHTML = '<h1 style="text-align:center; margin-top:100px; color:#ff4757;">Доступ заблокирован: требуется пароль.</h1>';
+                    return false;
+                }
+                if (savedPassword !== MY_SECRET_PASSWORD) {
+                    alert('Неверный пароль! Попробуйте еще раз.');
+                }
+            }
+            
+            localStorage.setItem('site_password', savedPassword);
+            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
+            return true;
+        }
+
+        // Управление модальным окном
+        openBtn.addEventListener('click', () => modal.style.display = 'flex');
+        closeBtn.addEventListener('click', () => modal.style.display = 'none');
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // Создание плитки на экране
+        function renderMangaCard(manga) {
+            const card = document.createElement('div');
+            card.className = 'tile manga-card';
+            const coverUrl = manga.cover ? manga.cover : 'https://unsplash.com';
+            
+            card.innerHTML = `
+                <div class="manga-cover" style="background-image: url('${coverUrl}');"></div>
+                <div class="manga-info">
+                    <h3 class="manga-title">${manga.title}</h3>
+                    <div class="manga-chapters">Глава ${manga.current}${manga.total ? ' / ' + manga.total : ''}</div>
+                </div>
+            `;
+            mangaGrid.appendChild(card);
+        }
+
+        // Загрузка данных из облака
+        async function loadMangaFromCloud() {
+            if (!supabase) return;
+            mangaGrid.innerHTML = '';
+            mangaGrid.appendChild(openBtn);
+
+            const { data, error } = await supabase
+                .from('manga')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                console.error('Ошибка загрузки:', error);
+                return;
+            }
+            data.forEach(manga => renderMangaCard(manga));
+        }
+
+        // Отправка формы в облако
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!supabase) return;
+
+            const newManga = {
+                title: document.getElementById('title').value,
+                cover: document.getElementById('cover').value,
+                current: parseInt(document.getElementById('currentChapter').value) || 1,
+                total: document.getElementById('totalChapters').value ? parseInt(document.getElementById('totalChapters').value) : null
+            };
+
+            const { error } = await supabase
+                .from('manga')
+                .insert([newManga]);
+
+            if (error) {
+                alert('Ошибка сохранения: ' + error.message);
+                return;
+            }
+
+            await loadMangaFromCloud();
+            form.reset();
+            document.getElementById('currentChapter').value = 1;
+            modal.style.display = 'none';
+        });
+
+        // Запуск
+        if (checkAuth()) {
+            loadMangaFromCloud();
+        }
+    </script>
+</body>
+</html>

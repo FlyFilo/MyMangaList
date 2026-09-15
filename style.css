@@ -1,0 +1,207 @@
+css/* Базовые сбросы и шрифты */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #121214;
+    color: #e1e1e6;
+    padding: 40px 20px;
+}
+
+.main-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.main-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.content-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Сетка для прямоугольных плиток */
+.manga-grid {
+    display: grid;
+    /* Плитки будут автоматически подстраиваться под размер экрана, минимум 180px в ширину */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px;
+}
+
+/* Общая база для плиток (пропорции как у книжной обложки) */
+.tile {
+    background-color: #202024;
+    border-radius: 8px;
+    aspect-ratio: 3 / 4.2; /* Фиксированное соотношение сторон прямоугольника */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Плитка-плюсик (Кнопка добавления) */
+.add-tile {
+    background-color: #1a1a1e;
+    border: 2px dashed #29292e;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+}
+
+.add-tile:hover {
+    border-color: #8257e5; /* Фиолетовый акцент при наведении */
+    background-color: #202024;
+}
+
+.plus-icon {
+    font-size: 48px;
+    color: #7c7c8a;
+    font-weight: 300;
+    transition: color 0.2s;
+}
+
+.add-tile:hover .plus-icon {
+    color: #8257e5;
+}
+
+/* Карточка с манхвой */
+.manga-cover {
+    flex: 1;
+    background-size: cover;
+    background-position: center;
+    background-color: #29292e;
+}
+
+.manga-info {
+    padding: 12px;
+    background-color: #202024;
+}
+
+.manga-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Три точки, если название слишком длинное */
+}
+
+.manga-chapters {
+    font-size: 0.85rem;
+    color: #7c7c8a;
+}
+
+/* Модальное окно (Попап формы) */
+.modal-overlay {
+    display: none; /* Изначально скрыто */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.modal-window {
+    background-color: #202024;
+    padding: 32px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-window h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Формы внутри попапа */
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-row {
+    display: flex;
+    gap: 16px;
+}
+
+.input-row .input-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    color: #7c7c8a;
+    margin-bottom: 6px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    background-color: #121214;
+    border: 1px solid #29292e;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+input:focus {
+    outline: none;
+    border-color: #8257e5;
+}
+
+/* Кнопки */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary {
+    background-color: #29292e;
+    color: #e1e1e6;
+}
+
+.btn-secondary:hover {
+    background-color: #323238;
+}
+
+.btn-primary {
+    background-color: #8257e5;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #9466ff;
+}
