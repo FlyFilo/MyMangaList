@@ -59,11 +59,9 @@
     <script src="https://jsdelivr.net"></script>
 
     <script>
-        // === ВСТАВЬТЕ СВОИ ДАННЫЕ СЮДА ===
-        const SUPABASE_URL = 'https://pznxnvgnqwbylevxbiqt.supabase.co';
-        const SUPABASE_SECRET_KEY = 'sb_secret_PJR5Tl6w_UQLxu4HiXM3pg_rAnKrdcz';
-        const MY_SECRET_PASSWORD = '134679Gleb41k.m';
-        // ==================================
+        // === НАСТРОЙКА БЕЗОПАСНОСТИ — теперь тут БЕЗ ПАРОЛЕЙ ===
+        const SUPABASE_URL = 'https://supabase.co'; 
+        // =======================================================
 
         let supabase = null;
 
@@ -73,23 +71,28 @@
         const form = document.getElementById('addMangaForm');
         const mangaGrid = document.getElementById('mangaGrid');
 
-        // Функция проверки пароля
+        // Функция проверки авторизации через ключ
         function checkAuth() {
-            let savedPassword = localStorage.getItem('site_password');
+            let savedKey = localStorage.getItem('supabase_secret_key');
             
-            while (savedPassword !== MY_SECRET_PASSWORD) {
-                savedPassword = prompt('Введите пароль для доступа к библиотеке манхвы:');
-                if (savedPassword === null) {
-                    document.body.innerHTML = '<h1 style="text-align:center; margin-top:100px; color:#ff4757;">Доступ заблокирован: требуется пароль.</h1>';
+            // Если ключа нет в памяти, запрашиваем его у пользователя
+            while (!savedKey) {
+                savedKey = prompt('Для доступа к библиотеке введите ваш Service Role Key из Supabase:');
+                if (savedKey === null) {
+                    document.body.innerHTML = '<h1 style="text-align:center; margin-top:100px; color:#ff4757;">Доступ заблокирован: требуется ключ.</h1>';
                     return false;
                 }
-                if (savedPassword !== MY_SECRET_PASSWORD) {
-                    alert('Неверный пароль! Попробуйте еще раз.');
+                if (savedKey.trim() === '') {
+                    alert('Ключ не может быть пустым!');
+                    savedKey = null;
                 }
             }
             
-            localStorage.setItem('site_password', savedPassword);
-            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
+            // Сохраняем ключ в локальное хранилище браузера на вашем устройстве
+            localStorage.setItem('supabase_secret_key', savedKey);
+            
+            // Инициализируем подключение с введенным ключом
+            supabase = supabase.createClient(SUPABASE_URL, savedKey);
             return true;
         }
 
@@ -128,7 +131,10 @@
                 .order('id', { ascending: true });
 
             if (error) {
-                console.error('Ошибка загрузки:', error);
+                console.error('Ошибка загрузки. Возможно, введен неверный ключ:', error);
+                // Если ключ не подошел, сбрасываем его, чтобы запросить заново
+                localStorage.removeItem('supabase_secret_key');
+                alert('Ошибка авторизации в базе данных! Обновите страницу и введите верный ключ.');
                 return;
             }
             data.forEach(manga => renderMangaCard(manga));
