@@ -56,7 +56,7 @@
                 if (!k.trim()) k = null;
             }
             localStorage.setItem('supabase_secret_key', k);
-            supabase = supabase.createClient(SUPABASE_URL, k);
+            supabase = window.supabase.createClient(SUPABASE_URL, k);
             return true;
         }
         if (openBtn) openBtn.addEventListener('click', () => { editingMangaId = null; currentMangaCover = ''; modalTitle.innerText = 'Новый тайтл'; submitBtn.innerText = 'Добавить'; deleteBtn.style.display = 'none'; form.reset(); document.getElementById('currentChapter').value = 1; modal.style.display = 'flex'; });
