@@ -44,7 +44,7 @@
         </div>
     </div>
     <!-- ИСПРАВЛЕНО: Рабочая библиотека Supabase -->
-    <script src="https://unpkg.com"></script>
+    <script src="https://cloudflare.com"></script>
     <script>
         // ИСПРАВЛЕНО: Вписан ваш адрес Supabase
         const SUPABASE_URL = 'https://pznxnvgnqwbylevxbfqt.supabase.co';
@@ -60,7 +60,7 @@
             }
             localStorage.setItem('supabase_secret_key', k);
             // ИСПРАВЛЕНО: Инициализация клиента
-            supabase = window.supabase.createClient(SUPABASE_URL, k);
+            supabase = supabase.createClient(SUPABASE_URL, k);
             return true;
         }
         
