@@ -60,7 +60,7 @@
             }
             localStorage.setItem('supabase_secret_key', k);
             // ИСПРАВЛЕНО: Инициализация клиента
-            supabase = supabase.createClient(SUPABASE_URL, k);
+           supabase = window.supabase.createClient(SUPABASE_URL, k);
             return true;
         }
         
