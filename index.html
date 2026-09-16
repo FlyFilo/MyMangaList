@@ -34,7 +34,8 @@
     </div>
 
     <script>
-        const API_URL = 'https://pznxnvgnqwbylevxbfqt.supabase.co';
+        // ИСПРАВЛЕНО: Теперь здесь стоит точная буква 'i' вместо 'f'
+        const API_URL = 'https://pznxnvgnqwbylevxbiqt.supabase.co';
         let key = localStorage.getItem('supabase_secret_key'), editingId = null, oldCover = '';
         const modal = document.getElementById('modalOverlay'), openBtn = document.getElementById('openFormBtn'), closeBtn = document.getElementById('closeFormBtn'), form = document.getElementById('addMangaForm'), grid = document.getElementById('mangaGrid'), submitBtn = document.getElementById('submitBtn'), deleteBtn = document.getElementById('deleteMangaBtn'), mTitle = document.getElementById('modalTitle');
 
@@ -57,36 +58,51 @@
         async function loadData() {
             if (!checkAuth()) return;
             grid.innerHTML = ''; grid.appendChild(openBtn);
-            const res = await fetch(`${API_URL}/rest/v1/manga?select=*&order=id.asc`, { headers: getHeaders() });
-            const data = await res.json();
-            if (!res.ok) { localStorage.removeItem('supabase_secret_key'); key = null; alert('Ошибка ключа!'); checkAuth(); loadData(); return; }
-            data.forEach(m => {
-                const card = document.createElement('div'); card.className = 'tile manga-card';
-                const url = m.cover || 'https://unsplash.com';
-                card.innerHTML = `<div class="manga-cover" style="background-image:url('${url}')"></div><div class="manga-info"><h3 class="manga-title">${m.title}</h3><div class="manga-controls"><button class="chapter-btn m-btn">—</button><div class="manga-chapters">Гл. ${m.current}${m.total ? ' / ' + m.total : ''}</div><button class="chapter-btn p-btn">+</button></div></div>`;
-                card.querySelector('.manga-cover').onclick = () => { editingId = m.id; oldCover = m.cover; mTitle.innerText = 'Редактировать'; submitBtn.innerText = 'Сохранить'; deleteBtn.style.display = 'block'; document.getElementById('title').value = m.title; document.getElementById('currentChapter').value = m.current; document.getElementById('totalChapters').value = m.total || ''; modal.style.display = 'flex'; };
-                card.querySelector('.m-btn').onclick = async (e) => { e.stopPropagation(); if (m.current > 1) { await fetch(`${API_URL}/rest/v1/manga?id=eq.${m.id}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify({ current: m.current - 1 }) }); loadData(); } };
-                card.querySelector('.p-btn').onclick = async (e) => { e.stopPropagation(); await fetch(`${API_URL}/rest/v1/manga?id=eq.${m.id}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify({ current: m.current + 1 }) }); loadData(); };
-                grid.appendChild(card);
-            });
+            try {
+                const res = await fetch(`${API_URL}/rest/v1/manga?select=*&order=id.asc`, { headers: getHeaders() });
+                const data = await res.json();
+                if (!res.ok) { localStorage.removeItem('supabase_secret_key'); key = null; alert('Ошибка ключа!'); checkAuth(); loadData(); return; }
+                data.forEach(m => {
+                    const card = document.createElement('div'); card.className = 'tile manga-card';
+                    const url = m.cover || 'https://unsplash.com';
+                    card.innerHTML = `<div class="manga-cover" style="background-image:url('${url}')"></div><div class="manga-info"><h3 class="manga-title">${m.title}</h3><div class="manga-controls"><button class="chapter-btn m-btn">—</button><div class="manga-chapters">Гл. ${m.current}${m.total ? ' / ' + m.total : ''}</div><button class="chapter-btn p-btn">+</button></div></div>`;
+                    card.querySelector('.manga-cover').onclick = () => { editingId = m.id; oldCover = m.cover; mTitle.innerText = 'Редактировать'; submitBtn.innerText = 'Сохранить'; deleteBtn.style.display = 'block'; document.getElementById('title').value = m.title; document.getElementById('currentChapter').value = m.current; document.getElementById('totalChapters').value = m.total || ''; modal.style.display = 'flex'; };
+                    card.querySelector('.m-btn').onclick = async (e) => { e.stopPropagation(); if (m.current > 1) { await fetch(`${API_URL}/rest/v1/manga?id=eq.${m.id}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify({ current: m.current - 1 }) }); loadData(); } };
+                    card.querySelector('.p-btn').onclick = async (e) => { e.stopPropagation(); await fetch(`${API_URL}/rest/v1/manga?id=eq.${m.id}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify({ current: m.current + 1 }) }); loadData(); };
+                    grid.appendChild(card);
+                });
+            } catch(err) { console.error(err); }
         }
 
         deleteBtn.onclick = async () => { if (editingId && confirm('Удалить?')) { await fetch(`${API_URL}/rest/v1/manga?id=eq.${editingId}`, { method: "DELETE", headers: getHeaders() }); modal.style.display = 'none'; loadData(); } };
 
         form.onsubmit = async (e) => {
             e.preventDefault(); submitBtn.disabled = true; submitBtn.innerText = 'Загрузка...';
-            const inp = document.getElementById('coverFile'), f = (inp && inp.files && inp.files.length > 0) ? inp.files[0] : null;
-            let coverUrl = oldCover;
-            if (f) {
-                const name = `${Date.now()}.${f.name.split('.').pop()}`;
-                const up = await fetch(`${API_URL}/storage/v1/object/covers/${name}`, { method: "POST", headers: getHeaders(), body: f });
-                if (up.ok) coverUrl = `${API_URL}/storage/v1/object/public/covers/${name}`;
+            try {
+                const inp = document.getElementById('coverFile');
+                const f = (inp && inp.files && inp.files.length > 0) ? inp.files[0] : null;
+                let coverUrl = oldCover;
+                
+                if (f) {
+                    const name = `${Date.now()}.${f.name.split('.').pop()}`;
+                    const up = await fetch(`${API_URL}/storage/v1/object/covers/${name}`, { method: "POST", headers: getHeaders(), body: f });
+                    if (up.ok) coverUrl = `${API_URL}/storage/v1/object/public/covers/${name}`;
+                }
+                
+                const body = { title: document.getElementById('title').value, cover: coverUrl || null, current: parseInt(document.getElementById('currentChapter').value) || 1, total: document.getElementById('totalChapters').value ? parseInt(document.getElementById('totalChapters').value) : null };
+                
+                if (editingId) await fetch(`${API_URL}/rest/v1/manga?id=eq.${editingId}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                else await fetch(`${API_URL}/rest/v1/manga`, { method: "POST", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                
+                modal.style.display = 'none'; loadData();
+            } catch (error) {
+                alert('Произошла ошибка при сохранении: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = editingId ? 'Сохранить' : 'Добавить';
             }
-            const body = { title: document.getElementById('title').value, cover: coverUrl || null, current: parseInt(document.getElementById('currentChapter').value) || 1, total: document.getElementById('totalChapters').value ? parseInt(document.getElementById('totalChapters').value) : null };
-            if (editingId) await fetch(`${API_URL}/rest/v1/manga?id=eq.${editingId}`, { method: "PATCH", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
-            else await fetch(`${API_URL}/rest/v1/manga`, { method: "POST", headers: { ...getHeaders(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
-            modal.style.display = 'none'; loadData(); submitBtn.disabled = false;
         };
+
         loadData();
     </script>
 </body>
